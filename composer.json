@@ -1,0 +1,57 @@
+{
+    "name": "webignition/symfony-messenger-message-dispatcher",
+    "description": "",
+    "keywords": [],
+    "homepage": "https://github.com/webignition/symfony-messenger-message-dispatcher",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jon Cram",
+            "email": "webignition@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "webignition\\SymfonyMessengerMessageDispatcher\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "webignition\\SymfonyMessengerMessageDispatcher\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "cs-ecs": "./vendor/bin/ecs check --ansi --no-progress-bar --config ecs.php",
+        "cs-phpcs": "./vendor/bin/phpcs",
+        "cs": [
+            "@cs-ecs",
+            "@cs-phpcs"
+        ],
+        "cs-fix": [
+            "./vendor/bin/ecs check --ansi --config ecs.php --fix"
+        ],
+        "static-analysis": "./vendor/bin/phpstan analyse",
+        "test": "./vendor/bin/phpunit --colors=always",
+        "ci": [
+            "@composer cs",
+            "@composer static-analysis",
+            "@composer test"
+        ]
+    },
+    "require": {
+        "php": "8.*",
+        "symfony/messenger": "^5.2"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "require-dev": {
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan": "^0.12.83",
+        "phpstan/phpstan-phpunit": "^0.12.18",
+        "phpunit/phpunit": "^9.5",
+        "squizlabs/php_codesniffer": "dev-master",
+        "symplify/easy-coding-standard": "^9.2"
+    }
+}

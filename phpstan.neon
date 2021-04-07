@@ -1,0 +1,8 @@
+parameters:
+  level: 8
+  paths:
+    - src
+    - tests
+  inferPrivatePropertyTypeFromConstructor: true
+  excludes_analyse:
+    - tests/Fixtures/*
