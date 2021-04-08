@@ -6,7 +6,8 @@ namespace webignition\SymfonyMessengerMessageDispatcher\Tests\Unit\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
-use webignition\SymfonyMessengerMessageDispatcher\Exception\NonDispatchableMessageException;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\RetryByLimitMiddleware;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\RetryableMessage;
@@ -14,59 +15,52 @@ use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\RetryableMessage;
 class RetryByLimitMiddlewareTest extends TestCase
 {
     /**
-     * @dataProvider invokeNoExceptionDataProvider
+     * @dataProvider invokeDataProvider
      *
      * @param array<class-string, int> $retryLimits
      */
-    public function testInvokeNoException(array $retryLimits, Envelope $envelope, Envelope $expectedEnvelope): void
+    public function testInvoke(array $retryLimits, Envelope $envelope, ResultInterface $expectedResult): void
     {
-        $middleware = new RetryByLimitMiddleware($retryLimits);
+        $result = (new RetryByLimitMiddleware($retryLimits))($envelope);
 
-        $handledEnvelope = ($middleware)($envelope);
-
-        self::assertEquals($expectedEnvelope, $handledEnvelope);
+        self::assertEquals($expectedResult, $result);
     }
 
     /**
      * @return array[]
      */
-    public function invokeNoExceptionDataProvider(): array
+    public function invokeDataProvider(): array
     {
         return [
             'no retry limits' => [
                 'retryLimits' => [],
                 'envelope' => Envelope::wrap(new Message()),
-                'expectedEnvelope' => Envelope::wrap(new Message()),
+                'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
             ],
             'no relevant retry limits' => [
                 'retryLimits' => [
                     Message::class => 3,
                 ],
                 'envelope' => Envelope::wrap(new Message()),
-                'expectedEnvelope' => Envelope::wrap(new Message()),
+                'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
             ],
-            'has relevant retry limits' => [
+            'has relevant retry limits, limit not reached' => [
                 'retryLimits' => [
                     RetryableMessage::class => 3,
                 ],
                 'envelope' => Envelope::wrap(new RetryableMessage()),
-                'expectedEnvelope' => Envelope::wrap(new RetryableMessage()),
+                'expectedResult' => Result::createDispatchable(Envelope::wrap(new RetryableMessage())),
+            ],
+            'has relevant retry limits, limit reached' => [
+                'retryLimits' => [
+                    RetryableMessage::class => 3,
+                ],
+                'envelope' => Envelope::wrap(new RetryableMessage(4)),
+                'expectedResult' => Result::createNonDispatchable(
+                    Envelope::wrap(new RetryableMessage(4)),
+                    RetryByLimitMiddleware::REASON
+                ),
             ],
         ];
-    }
-
-    public function invokeThrowsExceptionTest(): void
-    {
-        $retryLimit = 3;
-
-        $message = new RetryableMessage($retryLimit);
-
-        $middleware = new RetryByLimitMiddleware([
-            RetryableMessage::class => $retryLimit,
-        ]);
-
-        self::expectExceptionObject(new NonDispatchableMessageException($message));
-
-        ($middleware)(Envelope::wrap($message));
     }
 }

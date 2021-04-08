@@ -7,7 +7,6 @@ namespace webignition\SymfonyMessengerMessageDispatcher;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\StampInterface;
-use webignition\SymfonyMessengerMessageDispatcher\Exception\NonDispatchableMessageExceptionInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
 
 class MessageDispatcher implements MessageBusInterface
@@ -32,17 +31,25 @@ class MessageDispatcher implements MessageBusInterface
     /**
      * @param object|Envelope $message
      * @param StampInterface[] $stamps
-     *
-     * @throws NonDispatchableMessageExceptionInterface
      */
     public function dispatch($message, array $stamps = []): Envelope
     {
         $envelope = Envelope::wrap($message, $stamps);
+        $isDispatchable = true;
 
         foreach ($this->middleware as $middleware) {
-            $envelope = ($middleware)($envelope);
+            if ($isDispatchable) {
+                $result = ($middleware)($envelope);
+                $isDispatchable = $result->isDispatchable();
+
+                if ($isDispatchable) {
+                    $envelope = $result->getEnvelope();
+                }
+            }
         }
 
-        return $this->messageBus->dispatch($envelope);
+        return $isDispatchable
+            ? $this->messageBus->dispatch($envelope)
+            : $envelope;
     }
 }

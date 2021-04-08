@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessageMiddleware;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\RetryableMessage;
 
@@ -18,13 +20,11 @@ class DelayedMessageMiddlewareTest extends TestCase
      *
      * @param array<class-string, int> $delays
      */
-    public function testInvoke(array $delays, Envelope $envelope, Envelope $expectedEnvelope): void
+    public function testInvoke(array $delays, Envelope $envelope, ResultInterface $expectedResult): void
     {
-        $middleware = new DelayedMessageMiddleware($delays);
+        $result = (new DelayedMessageMiddleware($delays))($envelope);
 
-        $handledEnvelope = ($middleware)($envelope);
-
-        self::assertEquals($expectedEnvelope, $handledEnvelope);
+        self::assertEquals($expectedResult, $result);
     }
 
     /**
@@ -36,26 +36,26 @@ class DelayedMessageMiddlewareTest extends TestCase
             'no delays' => [
                 'delays' => [],
                 'envelope' => Envelope::wrap(new Message()),
-                'expectedEnvelope' => Envelope::wrap(new Message()),
+                'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
             ],
             'no relevant delays' => [
                 'delays' => [
                     RetryableMessage::class => 1000,
                 ],
                 'envelope' => Envelope::wrap(new Message()),
-                'expectedEnvelope' => Envelope::wrap(new Message()),
+                'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
             ],
             'has relevant delays' => [
                 'delays' => [
                     RetryableMessage::class => 1000,
                 ],
                 'envelope' => Envelope::wrap(new RetryableMessage()),
-                'expectedEnvelope' => Envelope::wrap(
+                'expectedResult' => Result::createDispatchable(Envelope::wrap(
                     new RetryableMessage(),
                     [
                         new DelayStamp(1000)
                     ]
-                ),
+                )),
             ],
         ];
     }
