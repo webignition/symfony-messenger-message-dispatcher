@@ -8,7 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use webignition\SymfonyMessengerMessageDispatcher\MessageDispatcher;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessageMiddleware;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\DelayedMessageMiddleware;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\FixedBackoffStrategy;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Services\MessageBus;
@@ -47,7 +48,7 @@ class MessageDispatcherTest extends TestCase
             'delayed message middleware' => [
                 'middleware' => [
                     new DelayedMessageMiddleware([
-                        Message::class => 1000,
+                        Message::class => new FixedBackoffStrategy(1000),
                     ])
                 ],
                 'message' => new Message(),
