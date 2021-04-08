@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace webignition\SymfonyMessengerMessageDispatcher\Middleware;
+namespace webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage;
 
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
 

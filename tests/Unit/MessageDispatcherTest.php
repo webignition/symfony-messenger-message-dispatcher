@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use webignition\SymfonyMessengerMessageDispatcher\MessageDispatcher;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessageMiddleware;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\DelayedMessageMiddleware;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Services\MessageBus;

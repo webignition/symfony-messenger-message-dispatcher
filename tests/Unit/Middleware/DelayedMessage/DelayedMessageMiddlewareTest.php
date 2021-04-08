@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace webignition\SymfonyMessengerMessageDispatcher\Tests\Unit\Middleware;
+namespace webignition\SymfonyMessengerMessageDispatcher\Tests\Unit\Middleware\DelayedMessage;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessageMiddleware;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\DelayedMessageMiddleware;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
