@@ -7,7 +7,9 @@ namespace webignition\SymfonyMessengerMessageDispatcher\Tests\Unit\Middleware\De
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\BackoffStrategyInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\DelayedMessageMiddleware;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\FixedBackoffStrategy;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
@@ -18,11 +20,11 @@ class DelayedMessageMiddlewareTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      *
-     * @param array<class-string, int> $delays
+     * @param array<string, BackoffStrategyInterface> $backoffStrategies
      */
-    public function testInvoke(array $delays, Envelope $envelope, ResultInterface $expectedResult): void
+    public function testInvoke(array $backoffStrategies, Envelope $envelope, ResultInterface $expectedResult): void
     {
-        $result = (new DelayedMessageMiddleware($delays))($envelope);
+        $result = (new DelayedMessageMiddleware($backoffStrategies))($envelope);
 
         self::assertEquals($expectedResult, $result);
     }
@@ -33,21 +35,21 @@ class DelayedMessageMiddlewareTest extends TestCase
     public function invokeDataProvider(): array
     {
         return [
-            'no delays' => [
-                'delays' => [],
+            'no backoff strategy' => [
+                'backoffStrategies' => [],
                 'envelope' => Envelope::wrap(new Message()),
                 'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
             ],
-            'no relevant delays' => [
-                'delays' => [
-                    RetryableMessage::class => 1000,
+            'no relevant backoff strategy' => [
+                'backoffStrategies' => [
+                    RetryableMessage::class => new FixedBackoffStrategy(1000),
                 ],
                 'envelope' => Envelope::wrap(new Message()),
                 'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
             ],
-            'has relevant delays by class name' => [
-                'delays' => [
-                    RetryableMessage::class => 1000,
+            'has relevant backoff strategy by class name' => [
+                'backoffStrategies' => [
+                    RetryableMessage::class => new FixedBackoffStrategy(1000),
                 ],
                 'envelope' => Envelope::wrap(new RetryableMessage()),
                 'expectedResult' => Result::createDispatchable(Envelope::wrap(
@@ -57,9 +59,9 @@ class DelayedMessageMiddlewareTest extends TestCase
                     ]
                 )),
             ],
-            'has relevant delays by wildcard' => [
-                'delays' => [
-                    '*' => 1000,
+            'has relevant backoff strategy by wildcard' => [
+                'backoffStrategies' => [
+                    '*' => new FixedBackoffStrategy(1000),
                 ],
                 'envelope' => Envelope::wrap(new RetryableMessage()),
                 'expectedResult' => Result::createDispatchable(Envelope::wrap(
@@ -69,10 +71,10 @@ class DelayedMessageMiddlewareTest extends TestCase
                     ]
                 )),
             ],
-            'has relevant delays by class name and wildcard' => [
-                'delays' => [
-                    RetryableMessage::class => 2000,
-                    '*' => 1000,
+            'has relevant backoff strategy by class name and wildcard' => [
+                'backoffStrategies' => [
+                    RetryableMessage::class => new FixedBackoffStrategy(2000),
+                    '*' => new FixedBackoffStrategy(1000),
                 ],
                 'envelope' => Envelope::wrap(new RetryableMessage()),
                 'expectedResult' => Result::createDispatchable(Envelope::wrap(

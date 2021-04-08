@@ -15,18 +15,33 @@ class DelayedMessageMiddleware implements MiddlewareInterface
     public const WILDCARD = '*';
 
     /**
-     * @param array<string, int> $delaysInMilliseconds
+     * @var BackoffStrategyInterface[]
+     */
+    private array $backoffStrategies = [];
+
+    /**
+     * @param array<string, BackoffStrategyInterface> $backoffStrategies
      */
     public function __construct(
-        private array $delaysInMilliseconds = [],
+        array $backoffStrategies = [],
     ) {
+        foreach ($backoffStrategies as $key => $value) {
+            if ($value instanceof BackoffStrategyInterface) {
+                $this->backoffStrategies[$key] = $value;
+            }
+        }
     }
 
     public function __invoke(Envelope $envelope): ResultInterface
     {
-        $delay = $this->findDelay($envelope);
+        $message = $envelope->getMessage();
 
-        if (is_int($delay) && $delay > 0) {
+        $backoffStrategy = $this->findBackoffStrategy($envelope->getMessage());
+        $delay = $backoffStrategy instanceof BackoffStrategyInterface
+            ? $backoffStrategy->getDelay($message)
+            : 0;
+
+        if ($delay > 0) {
             $envelope = $envelope
                 ->withoutStampsOfType(DelayStamp::class)
                 ->with(new DelayStamp($delay));
@@ -35,14 +50,13 @@ class DelayedMessageMiddleware implements MiddlewareInterface
         return Result::createDispatchable($envelope);
     }
 
-    private function findDelay(Envelope $envelope): ?int
+    private function findBackoffStrategy(object $message): ?BackoffStrategyInterface
     {
-        $message = $envelope->getMessage();
         $identifiers = [$message::class, self::WILDCARD];
 
         foreach ($identifiers as $identifier) {
-            if (array_key_exists($identifier, $this->delaysInMilliseconds)) {
-                return $this->delaysInMilliseconds[$identifier];
+            if (array_key_exists($identifier, $this->backoffStrategies)) {
+                return $this->backoffStrategies[$identifier];
             }
         }
 
