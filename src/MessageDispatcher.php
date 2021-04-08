@@ -7,6 +7,8 @@ namespace webignition\SymfonyMessengerMessageDispatcher;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\StampInterface;
+use webignition\SymfonyMessengerMessageDispatcher\Exception\NonDispatchableMessageExceptionInterface;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
 
 class MessageDispatcher implements MessageBusInterface
 {

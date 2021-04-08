@@ -8,8 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessageMiddleware;
-use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\MessageOne;
-use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\MessageTwo;
+use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
+use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\RetryableMessage;
 
 class DelayedMessageMiddlewareTest extends TestCase
 {
@@ -35,23 +35,23 @@ class DelayedMessageMiddlewareTest extends TestCase
         return [
             'no delays' => [
                 'delays' => [],
-                'envelope' => Envelope::wrap(new MessageOne()),
-                'expectedEnvelope' => Envelope::wrap(new MessageOne()),
+                'envelope' => Envelope::wrap(new Message()),
+                'expectedEnvelope' => Envelope::wrap(new Message()),
             ],
             'no relevant delays' => [
                 'delays' => [
-                    MessageTwo::class => 1000,
+                    RetryableMessage::class => 1000,
                 ],
-                'envelope' => Envelope::wrap(new MessageOne()),
-                'expectedEnvelope' => Envelope::wrap(new MessageOne()),
+                'envelope' => Envelope::wrap(new Message()),
+                'expectedEnvelope' => Envelope::wrap(new Message()),
             ],
             'has relevant delays' => [
                 'delays' => [
-                    MessageTwo::class => 1000,
+                    RetryableMessage::class => 1000,
                 ],
-                'envelope' => Envelope::wrap(new MessageTwo()),
+                'envelope' => Envelope::wrap(new RetryableMessage()),
                 'expectedEnvelope' => Envelope::wrap(
-                    new MessageTwo(),
+                    new RetryableMessage(),
                     [
                         new DelayStamp(1000)
                     ]

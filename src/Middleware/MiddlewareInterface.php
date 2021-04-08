@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace webignition\SymfonyMessengerMessageDispatcher;
+namespace webignition\SymfonyMessengerMessageDispatcher\Middleware;
 
 use Symfony\Component\Messenger\Envelope;
+use webignition\SymfonyMessengerMessageDispatcher\Exception\NonDispatchableMessageExceptionInterface;
 
 interface MiddlewareInterface
 {
