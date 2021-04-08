@@ -45,7 +45,7 @@ class DelayedMessageMiddlewareTest extends TestCase
                 'envelope' => Envelope::wrap(new Message()),
                 'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
             ],
-            'has relevant delays' => [
+            'has relevant delays by class name' => [
                 'delays' => [
                     RetryableMessage::class => 1000,
                 ],
@@ -54,6 +54,31 @@ class DelayedMessageMiddlewareTest extends TestCase
                     new RetryableMessage(),
                     [
                         new DelayStamp(1000)
+                    ]
+                )),
+            ],
+            'has relevant delays by wildcard' => [
+                'delays' => [
+                    '*' => 1000,
+                ],
+                'envelope' => Envelope::wrap(new RetryableMessage()),
+                'expectedResult' => Result::createDispatchable(Envelope::wrap(
+                    new RetryableMessage(),
+                    [
+                        new DelayStamp(1000)
+                    ]
+                )),
+            ],
+            'has relevant delays by class name and wildcard' => [
+                'delays' => [
+                    RetryableMessage::class => 2000,
+                    '*' => 1000,
+                ],
+                'envelope' => Envelope::wrap(new RetryableMessage()),
+                'expectedResult' => Result::createDispatchable(Envelope::wrap(
+                    new RetryableMessage(),
+                    [
+                        new DelayStamp(2000)
                     ]
                 )),
             ],
