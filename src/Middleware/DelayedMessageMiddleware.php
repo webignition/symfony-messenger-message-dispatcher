@@ -6,7 +6,6 @@ namespace webignition\SymfonyMessengerMessageDispatcher\Middleware;
 
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
-use webignition\SymfonyMessengerMessageDispatcher\MiddlewareInterface;
 
 class DelayedMessageMiddleware implements MiddlewareInterface
 {

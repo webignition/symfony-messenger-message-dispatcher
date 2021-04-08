@@ -9,8 +9,8 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use webignition\SymfonyMessengerMessageDispatcher\MessageDispatcher;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessageMiddleware;
-use webignition\SymfonyMessengerMessageDispatcher\MiddlewareInterface;
-use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\MessageOne;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
+use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Services\MessageBus;
 
 class MessageDispatcherTest extends TestCase
@@ -41,18 +41,18 @@ class MessageDispatcherTest extends TestCase
         return [
             'no middleware' => [
                 'middleware' => [],
-                'message' => new MessageOne(),
-                'expectedEnvelope' => Envelope::wrap(new MessageOne()),
+                'message' => new Message(),
+                'expectedEnvelope' => Envelope::wrap(new Message()),
             ],
             'delayed message middleware' => [
                 'middleware' => [
                     new DelayedMessageMiddleware([
-                        MessageOne::class => 1000,
+                        Message::class => 1000,
                     ])
                 ],
-                'message' => new MessageOne(),
+                'message' => new Message(),
                 'expectedEnvelope' => Envelope::wrap(
-                    new MessageOne(),
+                    new Message(),
                     [
                         new DelayStamp(1000)
                     ]
