@@ -11,8 +11,10 @@ use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterf
 
 class DelayedMessageMiddleware implements MiddlewareInterface
 {
+    public const WILDCARD = '*';
+
     /**
-     * @param array<class-string, int> $delaysInMilliseconds
+     * @param array<string, int> $delaysInMilliseconds
      */
     public function __construct(
         private array $delaysInMilliseconds = [],
@@ -21,15 +23,28 @@ class DelayedMessageMiddleware implements MiddlewareInterface
 
     public function __invoke(Envelope $envelope): ResultInterface
     {
-        $message = $envelope->getMessage();
-        $delay = $this->delaysInMilliseconds[$message::class] ?? 0;
+        $delay = $this->findDelay($envelope);
 
-        if ($delay > 0) {
+        if (is_int($delay) && $delay > 0) {
             $envelope = $envelope
                 ->withoutStampsOfType(DelayStamp::class)
                 ->with(new DelayStamp($delay));
         }
 
         return Result::createDispatchable($envelope);
+    }
+
+    private function findDelay(Envelope $envelope): ?int
+    {
+        $message = $envelope->getMessage();
+        $identifiers = [$message::class, self::WILDCARD];
+
+        foreach ($identifiers as $identifier) {
+            if (array_key_exists($identifier, $this->delaysInMilliseconds)) {
+                return $this->delaysInMilliseconds[$identifier];
+            }
+        }
+
+        return null;
     }
 }
