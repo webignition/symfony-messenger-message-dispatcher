@@ -7,5 +7,4 @@ namespace webignition\SymfonyMessengerMessageDispatcher\Message;
 interface RetryableMessageInterface
 {
     public function getRetryCount(): int;
-    public function incrementRetryCount(): static;
 }

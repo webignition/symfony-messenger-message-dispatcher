@@ -17,11 +17,4 @@ class RetryableMessage implements RetryableMessageInterface
     {
         return $this->retryCount;
     }
-
-    public function incrementRetryCount(): static
-    {
-        $this->retryCount++;
-
-        return $this;
-    }
 }
