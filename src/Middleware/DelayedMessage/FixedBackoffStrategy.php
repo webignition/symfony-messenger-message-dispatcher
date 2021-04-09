@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage;
 
-class FixedBackoffStrategy implements BackoffStrategyInterface
+class FixedBackoffStrategy extends AbstractBackoffStrategy
 {
     public function __construct(
         private int $delayInMilliseconds,
@@ -13,6 +13,6 @@ class FixedBackoffStrategy implements BackoffStrategyInterface
 
     public function getDelay(object $message): int
     {
-        return $this->delayInMilliseconds;
+        return $this->normalizeDelay($this->delayInMilliseconds);
     }
 }

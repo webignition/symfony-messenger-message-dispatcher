@@ -67,6 +67,11 @@ class ExponentialBackoffStrategyTest extends TestCase
                 'message' => new RetryableMessage(2),
                 'expectedDelay' => 3000,
             ],
+            'non-zero window, retryable message, delay > PHP_INT_MAX' => [
+                'window' => 1000,
+                'message' => new RetryableMessage(100),
+                'expectedDelay' => PHP_INT_MAX,
+            ],
         ];
     }
 }

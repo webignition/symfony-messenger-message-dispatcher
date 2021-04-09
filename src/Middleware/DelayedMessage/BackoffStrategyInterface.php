@@ -7,7 +7,7 @@ namespace webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessag
 interface BackoffStrategyInterface
 {
     /**
-     * @return int Delay in milliseconds
+     * @return int Delay in milliseconds, between 0 and PHP_INT_MAX
      */
     public function getDelay(object $message): int;
 }
