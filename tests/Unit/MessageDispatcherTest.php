@@ -10,24 +10,29 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 use webignition\SymfonyMessengerMessageDispatcher\MessageDispatcher;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\DelayedMessageMiddleware;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\FixedBackoffStrategy;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\IgnoredMessageMiddleware;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
+use webignition\SymfonyMessengerMessageDispatcher\Middleware\RetryByLimitMiddleware;
+use webignition\SymfonyMessengerMessageDispatcher\Stamp\NonDispatchableStamp;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
+use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\RetryableMessage;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Services\MessageBus;
 
 class MessageDispatcherTest extends TestCase
 {
     /**
-     * @dataProvider dispatchDataProvider
+     * @dataProvider dispatchIsDispatchedDataProvider
      *
      * @param MiddlewareInterface[] $middleware
      */
-    public function testDispatch(array $middleware, object $message, Envelope $expectedEnvelope): void
+    public function testDispatchIsDispatched(array $middleware, object $message, Envelope $expectedEnvelope): void
     {
         $messageBus = new MessageBus();
 
         $messageDispatcher = new MessageDispatcher($messageBus, $middleware);
 
-        $messageDispatcher->dispatch($message);
+        $returnedEnvelope = $messageDispatcher->dispatch($message);
+        self::assertEquals($expectedEnvelope, $returnedEnvelope);
 
         $messageBusStack = $messageBus->getStack();
 
@@ -37,7 +42,7 @@ class MessageDispatcherTest extends TestCase
     /**
      * @return array[]
      */
-    public function dispatchDataProvider(): array
+    public function dispatchIsDispatchedDataProvider(): array
     {
         return [
             'no middleware' => [
@@ -56,6 +61,62 @@ class MessageDispatcherTest extends TestCase
                     new Message(),
                     [
                         new DelayStamp(1000)
+                    ]
+                ),
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider dispatchNotDispatchedDataProvider
+     *
+     * @param MiddlewareInterface[] $middleware
+     */
+    public function testDispatchNotDispatched(array $middleware, object $message, Envelope $expectedEnvelope): void
+    {
+        $messageBus = new MessageBus();
+
+        $messageDispatcher = new MessageDispatcher($messageBus, $middleware);
+
+        $returnedEnvelope = $messageDispatcher->dispatch($message);
+        self::assertEquals($expectedEnvelope, $returnedEnvelope);
+
+        $messageBusStack = $messageBus->getStack();
+
+        self::assertSame([], $messageBusStack);
+    }
+
+    /**
+     * @return array[]
+     */
+    public function dispatchNotDispatchedDataProvider(): array
+    {
+        return [
+            'ignored middleware' => [
+                'middleware' => [
+                    new IgnoredMessageMiddleware([
+                        Message::class,
+                    ])
+                ],
+                'message' => new Message(),
+                'expectedEnvelope' => Envelope::wrap(
+                    new Message(),
+                    [
+                        new NonDispatchableStamp(IgnoredMessageMiddleware::REASON),
+                    ]
+                ),
+            ],
+            'retry by limit middleware' => [
+                'middleware' => [
+                    new RetryByLimitMiddleware([
+                        RetryableMessage::class => 2,
+                    ])
+                ],
+                'message' => new RetryableMessage(3),
+                'expectedEnvelope' => Envelope::wrap(
+                    new RetryableMessage(3),
+                    [
+                        new NonDispatchableStamp(RetryByLimitMiddleware::REASON),
                     ]
                 ),
             ],
