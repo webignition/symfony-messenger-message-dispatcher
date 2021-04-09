@@ -122,4 +122,34 @@ class MessageDispatcherTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider isDispatchableDataProvider
+     */
+    public function testIsDispatchable(Envelope $envelope, bool $expectedIsDispatchable): void
+    {
+        self::assertSame($expectedIsDispatchable, MessageDispatcher::isDispatchable($envelope));
+    }
+
+    /**
+     * @return array[]
+     */
+    public function isDispatchableDataProvider(): array
+    {
+        return [
+            'dispatchable' => [
+                'envelope' => Envelope::wrap(new Message()),
+                'expectedIsDispatchable' => true,
+            ],
+            'not dispatchable' => [
+                'envelope' => Envelope::wrap(
+                    new Message(),
+                    [
+                        new NonDispatchableStamp(IgnoredMessageMiddleware::REASON),
+                    ]
+                ),
+                'expectedIsDispatchable' => false,
+            ],
+        ];
+    }
 }
