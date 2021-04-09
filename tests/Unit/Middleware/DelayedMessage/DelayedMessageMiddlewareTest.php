@@ -10,8 +10,6 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\BackoffStrategyInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\DelayedMessageMiddleware;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessage\FixedBackoffStrategy;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\Message;
 use webignition\SymfonyMessengerMessageDispatcher\Tests\Model\RetryableMessage;
 
@@ -22,11 +20,11 @@ class DelayedMessageMiddlewareTest extends TestCase
      *
      * @param array<string, BackoffStrategyInterface> $backoffStrategies
      */
-    public function testInvoke(array $backoffStrategies, Envelope $envelope, ResultInterface $expectedResult): void
+    public function testInvoke(array $backoffStrategies, Envelope $envelope, Envelope $expectedEnvelope): void
     {
-        $result = (new DelayedMessageMiddleware($backoffStrategies))($envelope);
+        $envelope = (new DelayedMessageMiddleware($backoffStrategies))($envelope);
 
-        self::assertEquals($expectedResult, $result);
+        self::assertEquals($expectedEnvelope, $envelope);
     }
 
     /**
@@ -38,38 +36,38 @@ class DelayedMessageMiddlewareTest extends TestCase
             'no backoff strategy' => [
                 'backoffStrategies' => [],
                 'envelope' => Envelope::wrap(new Message()),
-                'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
+                'expectedEnvelope' => Envelope::wrap(new Message()),
             ],
             'no relevant backoff strategy' => [
                 'backoffStrategies' => [
                     RetryableMessage::class => new FixedBackoffStrategy(1000),
                 ],
                 'envelope' => Envelope::wrap(new Message()),
-                'expectedResult' => Result::createDispatchable(Envelope::wrap(new Message())),
+                'expectedEnvelope' => Envelope::wrap(new Message()),
             ],
             'has relevant backoff strategy by class name' => [
                 'backoffStrategies' => [
                     RetryableMessage::class => new FixedBackoffStrategy(1000),
                 ],
                 'envelope' => Envelope::wrap(new RetryableMessage()),
-                'expectedResult' => Result::createDispatchable(Envelope::wrap(
+                'expectedEnvelope' => Envelope::wrap(
                     new RetryableMessage(),
                     [
                         new DelayStamp(1000)
                     ]
-                )),
+                ),
             ],
             'has relevant backoff strategy by wildcard' => [
                 'backoffStrategies' => [
                     '*' => new FixedBackoffStrategy(1000),
                 ],
                 'envelope' => Envelope::wrap(new RetryableMessage()),
-                'expectedResult' => Result::createDispatchable(Envelope::wrap(
+                'expectedEnvelope' => Envelope::wrap(
                     new RetryableMessage(),
                     [
                         new DelayStamp(1000)
                     ]
-                )),
+                ),
             ],
             'has relevant backoff strategy by class name and wildcard' => [
                 'backoffStrategies' => [
@@ -77,12 +75,12 @@ class DelayedMessageMiddlewareTest extends TestCase
                     '*' => new FixedBackoffStrategy(1000),
                 ],
                 'envelope' => Envelope::wrap(new RetryableMessage()),
-                'expectedResult' => Result::createDispatchable(Envelope::wrap(
+                'expectedEnvelope' => Envelope::wrap(
                     new RetryableMessage(),
                     [
                         new DelayStamp(2000)
                     ]
-                )),
+                ),
             ],
         ];
     }

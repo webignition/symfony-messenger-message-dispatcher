@@ -8,6 +8,7 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\StampInterface;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
+use webignition\SymfonyMessengerMessageDispatcher\Stamp\NonDispatchableStampInterface;
 
 class MessageDispatcher implements MessageBusInterface
 {
@@ -39,17 +40,34 @@ class MessageDispatcher implements MessageBusInterface
 
         foreach ($this->middleware as $middleware) {
             if ($isDispatchable) {
-                $result = ($middleware)($envelope);
-                $isDispatchable = $result->isDispatchable();
-
-                if ($isDispatchable) {
-                    $envelope = $result->getEnvelope();
-                }
+                $envelope = ($middleware)($envelope);
+                $isDispatchable = $this->isDispatchable($envelope);
             }
         }
 
         return $isDispatchable
             ? $this->messageBus->dispatch($envelope)
             : $envelope;
+    }
+
+    private function isDispatchable(Envelope $envelope): bool
+    {
+        $stamps = $envelope->all();
+
+        foreach ($stamps as $value) {
+            if ($value instanceof NonDispatchableStampInterface) {
+                return false;
+            }
+
+            if (is_array($value)) {
+                foreach ($value as $stamp) {
+                    if ($stamp instanceof NonDispatchableStampInterface) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 }

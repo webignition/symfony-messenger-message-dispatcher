@@ -6,8 +6,7 @@ namespace webignition\SymfonyMessengerMessageDispatcher\Middleware;
 
 use Symfony\Component\Messenger\Envelope;
 use webignition\SymfonyMessengerMessageDispatcher\Message\RetryableMessageInterface;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
+use webignition\SymfonyMessengerMessageDispatcher\Stamp\NonDispatchableStamp;
 
 class RetryByLimitMiddleware implements MiddlewareInterface
 {
@@ -21,19 +20,21 @@ class RetryByLimitMiddleware implements MiddlewareInterface
     ) {
     }
 
-    public function __invoke(Envelope $envelope): ResultInterface
+    public function __invoke(Envelope $envelope): Envelope
     {
         $message = $envelope->getMessage();
         if (!$message instanceof RetryableMessageInterface) {
-            return Result::createDispatchable($envelope);
+            return $envelope;
         }
 
         $retryLimit = $this->retryLimits[$message::class] ?? 0;
 
         if ($message->getRetryCount() > $retryLimit) {
-            return Result::createNonDispatchable($envelope, self::REASON);
+            $envelope = $envelope
+                ->withoutStampsOfType(NonDispatchableStamp::class)
+                ->with(new NonDispatchableStamp(self::REASON));
         }
 
-        return Result::createDispatchable($envelope);
+        return $envelope;
     }
 }

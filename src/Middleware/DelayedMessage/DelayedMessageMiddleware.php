@@ -7,8 +7,6 @@ namespace webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessag
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use webignition\SymfonyMessengerMessageDispatcher\Middleware\MiddlewareInterface;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
 
 class DelayedMessageMiddleware implements MiddlewareInterface
 {
@@ -32,7 +30,7 @@ class DelayedMessageMiddleware implements MiddlewareInterface
         }
     }
 
-    public function __invoke(Envelope $envelope): ResultInterface
+    public function __invoke(Envelope $envelope): Envelope
     {
         $message = $envelope->getMessage();
 
@@ -47,7 +45,7 @@ class DelayedMessageMiddleware implements MiddlewareInterface
                 ->with(new DelayStamp($delay));
         }
 
-        return Result::createDispatchable($envelope);
+        return $envelope;
     }
 
     private function findBackoffStrategy(object $message): ?BackoffStrategyInterface

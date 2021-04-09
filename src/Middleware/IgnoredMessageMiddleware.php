@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace webignition\SymfonyMessengerMessageDispatcher\Middleware;
 
 use Symfony\Component\Messenger\Envelope;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\Result;
-use webignition\SymfonyMessengerMessageDispatcher\Middleware\Result\ResultInterface;
+use webignition\SymfonyMessengerMessageDispatcher\Stamp\NonDispatchableStamp;
 
 class IgnoredMessageMiddleware implements MiddlewareInterface
 {
@@ -20,12 +19,16 @@ class IgnoredMessageMiddleware implements MiddlewareInterface
     ) {
     }
 
-    public function __invoke(Envelope $envelope): ResultInterface
+    public function __invoke(Envelope $envelope): Envelope
     {
         $message = $envelope->getMessage();
 
-        return in_array($message::class, $this->messageClassNames)
-            ? Result::createNonDispatchable($envelope, self::REASON)
-            : Result::createDispatchable($envelope);
+        if (in_array($message::class, $this->messageClassNames)) {
+            $envelope = $envelope
+                ->withoutStampsOfType(NonDispatchableStamp::class)
+                ->with(new NonDispatchableStamp(self::REASON));
+        }
+
+        return $envelope;
     }
 }
