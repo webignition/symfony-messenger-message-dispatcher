@@ -6,7 +6,7 @@ namespace webignition\SymfonyMessengerMessageDispatcher\Middleware\DelayedMessag
 
 use webignition\SymfonyMessengerMessageDispatcher\Message\RetryableMessageInterface;
 
-class ExponentialBackoffStrategy implements BackoffStrategyInterface
+class ExponentialBackoffStrategy extends AbstractBackoffStrategy
 {
     public function __construct(private int $window = 1000)
     {
@@ -20,6 +20,6 @@ class ExponentialBackoffStrategy implements BackoffStrategyInterface
 
         $factor = (2 ** $retryCount) - 1;
 
-        return $factor * $this->window;
+        return $this->normalizeDelay($factor * $this->window);
     }
 }
