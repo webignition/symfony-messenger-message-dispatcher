@@ -41,7 +41,7 @@ class MessageDispatcher implements MessageBusInterface
         foreach ($this->middleware as $middleware) {
             if ($isDispatchable) {
                 $envelope = ($middleware)($envelope);
-                $isDispatchable = $this->isDispatchable($envelope);
+                $isDispatchable = self::isDispatchable($envelope);
             }
         }
 
@@ -50,7 +50,7 @@ class MessageDispatcher implements MessageBusInterface
             : $envelope;
     }
 
-    private function isDispatchable(Envelope $envelope): bool
+    public static function isDispatchable(Envelope $envelope): bool
     {
         $stamps = $envelope->all();
 
